@@ -1,3 +1,5 @@
+// https://cudaforces.com/problem/14
+
 __global__ void kernel(int* cudaData) {
     if (threadIdx.x == 0) {
         int a1 = cudaData[0];
