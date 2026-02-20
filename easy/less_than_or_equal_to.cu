@@ -21,7 +21,6 @@ int main() {
     cudaMemcpy(cudaData, hostData, 2 * sizeof(int), cudaMemcpyHostToDevice);
     kernel<<<1, 1>>>(cudaData, ans);
     cudaDeviceSynchronize();
-    cudaMemcpy(&hostData, cudaData, 2 * sizeof(int), cudaMemcpyDeviceToHost);
 
     int res;
     cudaMemcpy(&res, ans, sizeof(int), cudaMemcpyDeviceToHost);
