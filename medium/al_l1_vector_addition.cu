@@ -35,4 +35,5 @@ int main() {
 
     cudaFree(d_A);
     cudaFree(d_B);
+    cudaFree(d_C);
 }
