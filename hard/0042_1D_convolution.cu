@@ -43,4 +43,5 @@ int main() {
 
     cudaFree(dA);
     cudaFree(dB);
+    cudaFree(dout);
 }
