@@ -1,6 +1,6 @@
 // https://cudaforces.com/problem/42
 
-__global__ void kernel(int *dA, int *dB, int *dout, int m, int k) {
+__global__ void kernel(const int *dA, const int *dB, int *dout, int m, int k) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < k) {
         int out = 0;
@@ -22,10 +22,10 @@ int main() {
 
     int *dA = nullptr, *dB = nullptr;
     cudaMalloc(&dA, n * sizeof(int));
-    cudaMalloc(&dB, n * sizeof(int));
+    cudaMalloc(&dB, m * sizeof(int));
 
     cudaMemcpy(dA, hA, n * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(dB, hB, n * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(dB, hB, m * sizeof(int), cudaMemcpyHostToDevice);
 
     int k = n - m + 1;
 
