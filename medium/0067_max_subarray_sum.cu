@@ -1,61 +1,52 @@
 // https://cudaforces.com/problem/67
 
-__global__ void kernel_sum(const int *dA, int *dout, int k, int w, int n) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < k) {
-        int out = 0;
-        for (int j = 0; j < w; ++j) {
-            if (i + j < n) {
-                out += dA[i + j];
-            }
+__global__ void kernel(int *dA, int *dB, int *score, int n) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < n) {
+        if (dA[idx] > dB[idx]) {
+            atomicAdd(score, 1);
+        } 
+        else if (dA[idx] < dB[idx]) {
+            atomicAdd(score, -1);
         }
-        dout[i] = out;
-    }
-}
-
-__global__ void kernel_max(const int *dout, int k, int *dans) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < k) {
-        atomicMax(dans, dout[i]);
     }
 }
 
 int main() {
-    int n, w;
-    scanf("%d %d", &n, &w);
+    int n;
+    scanf("%d", &n);
 
-    int A[n];
-    for (int i = 0; i < n; ++i) scanf("%d", &A[i]);
+    int hA[n], hB[n];
+    for (int i = 0; i < n; ++i) scanf("%d", &hA[i]);
+    for (int i = 0; i < n; ++i) scanf("%d", &hB[i]);
 
-    int *dA = nullptr;
+    int *dA = nullptr, *dB = nullptr;
     cudaMalloc(&dA, n * sizeof(int));
-    cudaMemcpy(dA, A, n * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMalloc(&dB, n * sizeof(int));
+    cudaMemcpy(dA, hA, n * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(dB, hB, n * sizeof(int), cudaMemcpyHostToDevice);
 
-    int k = n - w + 1;
+    int *score = nullptr;
+    cudaMalloc(&score, sizeof(int));
+    int init = 0;
+    cudaMemcpy(score, &init, sizeof(int), cudaMemcpyHostToDevice);  
 
-    int *dout = nullptr;
-    cudaMalloc(&dout, k * sizeof(int));
-
-    int block = 16;
-    int grid = (k + block - 1) / block;
-
-    kernel_sum<<<grid, block>>>(dA, dout, k, w, n);
-    cudaDeviceSynchronize();
-
-    int int_min = INT_MIN;
-    int *dans = nullptr;
-    cudaMalloc(&dans, sizeof(int));
-    cudaMemcpy(dans, &int_min, sizeof(int), cudaMemcpyHostToDevice);
-
-    kernel_max<<<grid, block>>>(dout, k, dans);
+    int block = 256;
+    int grid = (n + block - 1) / block;
+    kernel<<<grid, block>>>(dA, dB, score, n);
     cudaDeviceSynchronize();
 
     int out;
-    cudaMemcpy(&out, dans, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&out, score, sizeof(int), cudaMemcpyDeviceToHost);
 
-    printf("%d", out);
+    if (out > 0) {
+        printf("%d", 1);
+    }
+    else {
+        printf("%d", 0);
+    }
 
     cudaFree(dA);
-    cudaFree(dout);
-    cudaFree(dans);
+    cudaFree(dB);
+    cudaFree(score);
 }
