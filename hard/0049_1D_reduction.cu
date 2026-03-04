@@ -36,4 +36,5 @@ int main() {
 
 
     cudaFree(cudaData);
+    cudaFree(dsum);
 }
